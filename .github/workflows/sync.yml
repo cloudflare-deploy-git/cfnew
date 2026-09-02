@@ -1,0 +1,23 @@
+name: Sync Fork
+
+on:
+  schedule:
+    # 设定定时任务：每天 UTC 时间 0:00（北京时间早 8:00）自动检测一次
+    - cron: '0 0 * * *'
+  # 允许你在网页端手动点击按钮触发
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout target repo
+        uses: actions/checkout@v4
+
+      - name: Sync Upstream
+        uses: a2251399/fork-sync-upstream-action@v1.0.0
+        with:
+          upstream_repo: 'bia-pain-bache/BPB-Wizard' # 上游原作者仓库
+          upstream_branch: 'main'                    # 原作者主分支
+          target_branch: 'main'                      # 你的主分支
+          git_pull_args: '--rebase'
