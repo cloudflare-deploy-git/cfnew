@@ -1,0 +1,53 @@
+name: Deploy Worker to Cloudflare
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Deploy to Cloudflare Worker
+        run: |
+          # 自动定位项目根目录（兼容根目录与 ./web 结构）
+          if [ -d "./web" ] && [ -f "./web/wrangler.toml" ]; then
+            cd ./web
+          fi
+
+          # 自动安装依赖
+          if [ -f "package-lock.json" ]; then
+            npm ci
+          elif [ -f "package.json" ]; then
+            npm install
+          fi
+
+          # 读取 Variables 或 Secrets 变量
+          RAW_WORKER_NAME="${{ vars.WORKER_NAME || secrets.WORKER_NAME }}"
+
+          if [ -n "$RAW_WORKER_NAME" ]; then
+            # 👈 自动格式化：大写转小写，下划线 _ 转为连字符 -
+            CLEAN_WORKER_NAME=$(echo "$RAW_WORKER_NAME" | tr '[:upper:]' '[:lower:]' | tr '_' '-')
+            
+            echo "原始设置名称: $RAW_WORKER_NAME"
+            echo "自动兼容处理后的 Worker 名称: $CLEAN_WORKER_NAME"
+            
+            npx wrangler deploy --name "$CLEAN_WORKER_NAME"
+          else
+            echo "未设置 WORKER_NAME，将使用 wrangler.toml 默认名称部署"
+            npx wrangler deploy
+          fi
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
