@@ -1,5 +1,6 @@
 # CFnew - 终端 v3.0
 
+
 **语言:** [中文](README.md) | [فارسی](فارسی.md)
 
 [Telegram 交流群](https://t.me/+ft-zI76oovgwNmRh)
